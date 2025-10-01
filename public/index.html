@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Management System - ESP32</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Sistema de Gerenciamento IoT</h1>
+            <p class="subtitle">Monitoramento de Dispositivos ESP32 via MQTT</p>
+        </header>
+
+        <!-- Dashboard Stats -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">📱</div>
+                <div class="stat-info">
+                    <h3 id="total-devices">0</h3>
+                    <p>Total de Dispositivos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3 id="online-devices">0</h3>
+                    <p>Dispositivos Online</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <h3 id="total-readings">0</h3>
+                    <p>Leituras de Sensores</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <h3 id="active-automations">0</h3>
+                    <p>Automações Ativas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('devices')">Dispositivos</button>
+            <button class="tab-button" onclick="showTab('automations')">Automações</button>
+            <button class="tab-button" onclick="showTab('add-device')">Adicionar Dispositivo</button>
+        </div>
+
+        <!-- Devices Tab -->
+        <section id="devices-tab" class="tab-content active">
+            <div class="section-header">
+                <h2>Dispositivos Registrados</h2>
+                <button class="btn btn-primary" onclick="refreshDevices()">🔄 Atualizar</button>
+            </div>
+            <div id="devices-list" class="devices-grid"></div>
+        </section>
+
+        <!-- Automations Tab -->
+        <section id="automations-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Automações e Rotinas</h2>
+                <button class="btn btn-primary" onclick="showAddAutomation()">➕ Nova Automação</button>
+            </div>
+            
+            <div id="add-automation-form" class="form-container" style="display: none;">
+                <h3>Criar Nova Automação</h3>
+                <form onsubmit="createAutomation(event)">
+                    <div class="form-group">
+                        <label for="auto-name">Nome da Automação:</label>
+                        <input type="text" id="auto-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="auto-device">Dispositivo:</label>
+                        <select id="auto-device" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="auto-sensor">Tipo de Sensor:</label>
+                        <select id="auto-sensor" required>
+                            <option value="temperature">Temperatura</option>
+                            <option value="humidity">Umidade</option>
+                            <option value="pressure">Pressão</option>
+                            <option value="light">Luz</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="auto-condition">Condição:</label>
+                        <select id="auto-condition" required>
+                            <option value="greater">Maior que</option>
+                            <option value="less">Menor que</option>
+                            <option value="equal">Igual a</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="auto-threshold">Valor Limite:</label>
+                        <input type="number" id="auto-threshold" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="auto-action">Ação (comando):</label>
+                        <input type="text" id="auto-action" placeholder="Ex: LED_ON, ALARM, etc." required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Criar Automação</button>
+                        <button type="button" class="btn btn-secondary" onclick="hideAddAutomation()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="automations-list" class="automations-list"></div>
+        </section>
+
+        <!-- Add Device Tab -->
+        <section id="add-device-tab" class="tab-content">
+            <div class="form-container">
+                <h2>Registrar Novo Dispositivo</h2>
+                <form onsubmit="registerDevice(event)">
+                    <div class="form-group">
+                        <label for="device-id">ID do Dispositivo (ESP32):</label>
+                        <input type="text" id="device-id" placeholder="Ex: ESP32_001" required>
+                        <small>Use um identificador único para o ESP32</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-name">Nome do Dispositivo:</label>
+                        <input type="text" id="device-name" placeholder="Ex: Sensor Sala Principal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-type">Tipo:</label>
+                        <select id="device-type">
+                            <option value="ESP32">ESP32</option>
+                            <option value="ESP32-CAM">ESP32-CAM</option>
+                            <option value="ESP32-WROVER">ESP32-WROVER</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="device-location">Localização:</label>
+                        <input type="text" id="device-location" placeholder="Ex: Sala de Estar">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Registrar Dispositivo</button>
+                </form>
+
+                <div class="info-box">
+                    <h3>ℹ️ Configuração do ESP32</h3>
+                    <p>Configure seu ESP32 para enviar dados via MQTT:</p>
+                    <ul>
+                        <li><strong>Broker MQTT:</strong> test.mosquitto.org (ou configure o seu próprio)</li>
+                        <li><strong>Tópico de Dados:</strong> iot-funcionando/{device_id}/data</li>
+                        <li><strong>Tópico de Status:</strong> iot-funcionando/{device_id}/status</li>
+                        <li><strong>Tópico de Comandos:</strong> iot-funcionando/{device_id}/command</li>
+                    </ul>
+                    <p>Formato JSON de dados esperado:</p>
+                    <pre>{"temperature": 25.5, "humidity": 60, "pressure": 1013, "light": 450}</pre>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Device Details Modal -->
+    <div id="device-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDeviceModal()">&times;</span>
+            <h2 id="modal-device-name"></h2>
+            <div id="modal-device-details"></div>
+            <div id="modal-sensor-data"></div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="sendDeviceCommand()">📤 Enviar Comando</button>
+                <button class="btn btn-secondary" onclick="closeDeviceModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

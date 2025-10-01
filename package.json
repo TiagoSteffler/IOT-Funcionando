@@ -1,0 +1,21 @@
+{
+  "name": "iot-funcionando",
+  "version": "1.0.0",
+  "description": "Trabalho 2 da disciplina de Internet das Coisas - DLSC808",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["iot", "esp32", "mqtt", "sensors"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mqtt": "^5.14.1",
+    "sqlite3": "^5.1.7"
+  }
+}
